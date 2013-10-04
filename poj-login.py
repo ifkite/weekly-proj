@@ -8,7 +8,30 @@ import cookielib
 import httplib
 httplib.HTTPConnection.debuglevel=1
 '''change agent'''
-def postData(logUrl, logData):
+def postData(logUrl, logData, isLogin):
+    request = urllib2.Request(logUrl, urllib.urlencode(logData))
+    request.add_header('host','poj.org')
+    request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:10.0.1) Gecko/20100101 Firefox/10.0.1')
+    request.add_header('Accept-Encoding', 'gzip')
+    request.add_header('Connection','keep-alive')
+    if isLogin:
+        cj = cookielib.CookieJar()
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), urllib2.HTTPHandler)
+    '''another way to add header'''
+    #opener.addheaders = [(),(),]
+    gzipFd = opener.open(request)
+    gzipData = gzipFd.read()
+    gzipStream = StringIO.StringIO(gzipData)
+    unZipFd = gzip.GzipFile(fileobj=gzipStream)
+    html = unZipFd.read() 
+    #open('tmp.html','w').write(html)
+    return opener 
+def main():
+    '''login'''
+    psWord = raw_input('Enter your password on POJ: ')
+    logUrl = 'http://poj.org/login'
+    logData = {'user_id1':'testdot', 'password1':psWord, 'url':'submit', 'B1':'login'}
+
     request = urllib2.Request(logUrl, urllib.urlencode(logData))
     request.add_header('host','poj.org')
     request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:10.0.1) Gecko/20100101 Firefox/10.0.1')
@@ -22,17 +45,8 @@ def postData(logUrl, logData):
     gzipData = gzipFd.read()
     gzipStream = StringIO.StringIO(gzipData)
     unZipFd = gzip.GzipFile(fileobj=gzipStream)
-    html = unZipFd.read() 
-    #open('tmp.html','w').write(html)
-    return html
-    
-def main():
-    '''login'''
-    psWord = raw_input('Enter your password on POJ: ')
-    logUrl = 'http://poj.org/login'
-    logData = {'user_id1':'testdot', 'password1':psWord, 'url':'submit?problem_id=1000', 'B1':'login'}
-    logHtml = postData(logUrl, logData) 
-    open('log.html','wa').write(logHtml)
+    html = unZipFd.read()
+
     '''
        1.get name from args
        2.parsing, get the problem_id
@@ -52,7 +66,17 @@ def main():
                 submitUrl = 'http://poj.org/submit'
                 srcCode = srcFile.read()
                 submitData = {'language':'1', 'problem_id':problem_id, 'source':srcCode, 'submit':'Submit'}
-                html = postData(submitUrl, submitData)
+                request = urllib2.Request(submitUrl, urllib.urlencode(submitData))
+                request.add_header('host','poj.org')
+                request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:10.0.1) Gecko/20100101 Firefox/10.0.1')
+                request.add_header('Accept-Encoding', 'gzip')
+                request.add_header('Connection','keep-alive')
+                gzipFd = opener.open(request)
+                gzipData = gzipFd.read()
+                gzipStream = StringIO.StringIO(gzipData)
+                unZipFd = gzip.GzipFile(fileobj=gzipStream)
+                html = unZipFd.read()
+
                 srcFile.close()
                 open('submit.html','w').write(html) 
 if __name__ == '__main__':
