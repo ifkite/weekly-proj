@@ -6,6 +6,7 @@ import sys
 import re
 import cookielib
 import httplib
+from bs4 import BeautifulSoup
 #httplib.HTTPConnection.debuglevel=1
 '''change agent'''
 def postData(logUrl, logData, opener, loginFlag):
@@ -14,18 +15,23 @@ def postData(logUrl, logData, opener, loginFlag):
     request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:10.0.1) Gecko/20100101 Firefox/10.0.1')
     request.add_header('Accept-Encoding', 'gzip')
     request.add_header('Connection','keep-alive')
+    html = ''
+    data = {'opener':opener, 'html':html}
     if loginFlag is False:
         cj = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj), urllib2.HTTPHandler)
     '''another way to add header'''
+    data['opener'] = opener
     #opener.addheaders = [(),(),]
     gzipFd = opener.open(request)
     gzipData = gzipFd.read()
     gzipStream = StringIO.StringIO(gzipData)
     unZipFd = gzip.GzipFile(fileobj=gzipStream)
-    html = unZipFd.read() 
-    return opener
-    #open('tmp.html','w').write(html)
+    data['html'] = unZipFd.read() 
+    return data
+    '''low efficient code, in fact, data['opener'] do not chaenged, but i have to''' 
+    '''return the value'''
+    #open('tmp.html','w').write(html) 
     #return html 
 def logout(logoutUrl, opener):
     request = urllib2.Request(logoutUrl)
@@ -37,18 +43,25 @@ def logout(logoutUrl, opener):
 def main():
     '''login'''
     psWord = raw_input('Enter your password on POJ: ')
+    user_id = 'testdot'
     logUrl = 'http://poj.org/login'
-    logData = {'user_id1':'testdot', 'password1':psWord, 'url':'submit', 'B1':'login'}
+    logData = {'user_id1': user_id, 'password1':psWord, 'url':'submit', 'B1':'login'}
     opener = urllib2.OpenerDirector() 
-    tmpOpener = postData(logUrl, logData, opener, loginFlag = False)
-    opener = tmpOpener
+    data = postData(logUrl, logData, opener, loginFlag = False)
     '''
+       int for loop do the following things:
        1.get name from args
        2.parsing, get the problem_id
        3.read specific file
        4.submit file to matched url
     ''' 
+
     pattern = '(\d+)\.(\w+)'
+
+    '''hardcode: and if not find statParse, do not raise exception'''
+    '''when poj changed, the code can not work'''
+    statParse = 'a[href^=userstatus?user_id=' + user_id + ']'
+    
     for v in sys.argv[1:]:
         matchobj = re.match(pattern, v)
         if matchobj:
@@ -61,7 +74,13 @@ def main():
                 submitUrl = 'http://poj.org/submit'
                 srcCode = srcFile.read()
                 submitData = {'language':'1', 'problem_id':problem_id, 'source':srcCode, 'submit':'Submit'}
-                tmpOpener = postData(submitUrl, submitData, opener, loginFlag = True)  
+                data = postData(submitUrl, submitData, data['opener'], loginFlag = True)  
+                '''parse status html'''
+                soup = BeautifulSoup(data['html'])
+                tags = soup.select(statParse) 
+                for tag in tags:
+                    tagPar = tag.parent.parent
+                    print '%s \t %s'%(tagPar.contents[2].string, tagPar.contents[3].string)
                 srcFile.close()
     logoutUrl = 'http://poj.org/login?action=logout&url=%2F' 
     logout(logoutUrl,opener)
