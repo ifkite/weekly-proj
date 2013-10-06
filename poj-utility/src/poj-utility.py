@@ -75,7 +75,8 @@ def main():
                 srcCode = srcFile.read()
                 submitData = {'language':'1', 'problem_id':problem_id, 'source':srcCode, 'submit':'Submit'}
                 data = postData(submitUrl, submitData, data['opener'], loginFlag = True)  
-                '''parse status html'''
+
+                '''parse status html, working in a particular way'''
                 soup = BeautifulSoup(data['html'])
                 tags = soup.select(statParse) 
                 for tag in tags:
