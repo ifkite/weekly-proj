@@ -56,12 +56,14 @@ def main():
        4.submit file to matched url
     ''' 
 
-    pattern = '(\d+)\.(\w+)'
+    pattern = '(\d+)\.(c|cpp|java|pas)'
 
     '''hardcode: and if not find statParse, do not raise exception'''
     '''when poj changed, the code can not work'''
     statParse = 'a[href^=userstatus?user_id=' + user_id + ']'
-    
+    '''NEED TO SOLVE: exception of lacking argv '''
+    '''little chances that users on windows use this srcipt'''
+    lang = {'cpp':'0', 'c':'1','java':'2','pas':'3'}
     for v in sys.argv[1:]:
         matchobj = re.match(pattern, v)
         if matchobj:
@@ -71,9 +73,10 @@ def main():
                 print 'failed to open %s, file may not exist' %(v),
             else:
                 problem_id = matchobj.group(1)
+                langId = lang[matchobj.group(2)]
                 submitUrl = 'http://poj.org/submit'
                 srcCode = srcFile.read()
-                submitData = {'language':'1', 'problem_id':problem_id, 'source':srcCode, 'submit':'Submit'}
+                submitData = {'language':langId, 'problem_id':problem_id, 'source':srcCode, 'submit':'Submit'}
                 data = postData(submitUrl, submitData, data['opener'], loginFlag = True)  
 
                 '''parse status html, working in a particular way'''
@@ -83,6 +86,9 @@ def main():
                     tagPar = tag.parent.parent
                     print '%s \t %s'%(tagPar.contents[2].string, tagPar.contents[3].string)
                 srcFile.close()
+        else:
+            print 'please name src file by problem id\n'            
+            print 'examples: 1000.c'
     logoutUrl = 'http://poj.org/login?action=logout&url=%2F' 
     logout(logoutUrl,opener)
 if __name__ == '__main__':
