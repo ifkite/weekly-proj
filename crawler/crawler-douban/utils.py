@@ -7,6 +7,7 @@
 import hashlib
 import random
 import marshal
+import gdbm
 import time
 def merge_tups(*args):
 	li=[]
@@ -22,19 +23,32 @@ def calc_hash(url):
 	return url_hash
 
 def init_condition():
-	# 'with' version later
 	begin=time.clock()
 	try:
-		out=open('flag.dat','rb')
-		run_time=marshal.load(out)
-		out.close()
-		return (run_time,begin)
-	except IOError:
+		utils_db=gdbm.open('conf.db','r')
+		run_time=utils_db['run_time']
+		utils_db.close()
+		return (float(run_time),begin)
+	except gdbm.error:
 		new_time=0
-		new_out=open('flag.dat','wb')
-		marshal.dump(new_time,new_out)
-		new_out.close()
+		utils_db=gdbm.open('conf.db','c')
+		utils_db['run_time']=str(new_time)
+		utils_db.close()
 		return (new_time,begin)
+# def init_condition():
+# 	# 'with' version later
+# 	begin=time.clock()
+# 	try:
+# 		out=open('flag.dat','rb')
+# 		run_time=marshal.load(out)
+# 		out.close()
+# 		return (run_time,begin)
+# 	except IOError:
+# 		new_time=0
+# 		new_out=open('flag.dat','wb')
+# 		marshal.dump(new_time,new_out)
+# 		new_out.close()
+# 		return (new_time,begin)
 
 # return flag
 def stop_condition(run_time,begin):
@@ -45,15 +59,25 @@ def stop_condition(run_time,begin):
 	else:
 		return 0
 
+# def update_flag(run_time,begin):
+# 	# run_time,begin=run_time,begin
+# 	pass_time=time.clock()-begin
+# 	run_time=run_time+pass_time
+# 	ouf=open('flag.dat','wb')
+# 	marshal.dump(run_time,ouf)
+# 	ouf.close()
+# 	print run_time
+# 	return (run_time,begin)
+
 def update_flag(run_time,begin):
-	# run_time,begin=run_time,begin
+	# weak code,what will happen when call update_falg before calling init_condition
 	pass_time=time.clock()-begin
 	run_time=run_time+pass_time
-	ouf=open('flag.dat','wb')
-	marshal.dump(run_time,ouf)
-	ouf.close()
-	print run_time
+	conf_db=gdbm.open('conf.db','w')
+	conf_db['run_time']=str(run_time)
+	conf_db.close()
 	return (run_time,begin)
+
 
 if __name__ == '__main__':
 	# url='http://www.douban.com/note/321347716/'
