@@ -4,10 +4,9 @@
 # 	tup2_list=list() if tup2==None else list(tup2)
 # 	tup1_list.extend(tup2_list)
 # 	return tuple(tup1_list)
+import gdbm
 import hashlib
 import random
-import marshal
-import gdbm
 import time
 def merge_tups(*args):
 	li=[]
@@ -17,10 +16,15 @@ def merge_tups(*args):
 	return tuple(li)
 	# return tuple(li)
 def calc_hash(url):
-	url_hash=''
-	for i in [random.randint(1,20) for x in range(8)]:
-		url_hash+=hashlib.sha1(url).hexdigest()[i]
-	return url_hash
+	'''return a constant hash string if url is also constant'''
+	
+	# DEPRECATED: the following code return a changeable string even though the url is constant
+	# this code is maybe useful in gererating a temporary random varable 
+	# url_hash=''
+	# for i in [random.randint(1,20) for x in range(8)]:
+	# 	url_hash+=hashlib.sha1(url).hexdigest()[i]
+	
+	return hashlib.sha1(url).hexdigest()[0:8]
 
 def init_condition():
 	begin=time.clock()
@@ -53,7 +57,7 @@ def init_condition():
 # return flag
 def stop_condition(run_time,begin):
 	run_time,begin=run_time,begin
-	stop=20
+	stop=20# run 20 sec
 	if run_time>stop-begin:
 		return 1
 	else:
@@ -80,7 +84,7 @@ def update_flag(run_time,begin):
 
 
 if __name__ == '__main__':
-	# url='http://www.douban.com/note/321347716/'
+	# url='http://book.douban.com/subject/4854123/'
 	# url_hash=calc_hash(url)
 	# print url_hash
 	run_time,begin=init_condition()
