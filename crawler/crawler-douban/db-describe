@@ -1,0 +1,8 @@
+book
+id title isbn
+
+url
+id protocol domain path 
+
+evaluate
+rank(calc by reverse link) depth reverse_link comments score

@@ -2,6 +2,12 @@ import parse
 import settings
 import utils
 from mydb import CrawlerDb
+
+#TODO: [1]Multi tags stroage in db.(mydb.py)
+#      [2]Page rank algorithm.(crawler.py)
+#      [3]Hashing operation/db design to be modified.(mydb.py)
+#      [4]Deal with network exception.(parse.py)
+
 class Crawler:
 	def __init__(self):
 		self.crawlerdb=CrawlerDb()
@@ -10,26 +16,48 @@ class Crawler:
 		self.add_rank()
 	
 	def quit(self):
+		"""
+		Do something after crawl process.
+		In v0.1 it just closes db connection.
+		"""
 		self.crawlerdb.close()
 
 	def get_url(self):
-		"""get an url from data base"""
+		"""
+		Get an url from data base.
+		"""
 		#this func determine that the way you crawl websites, depth-first, breadth-first or ohters
 		# need database to get url
 		return self.crawlerdb.get_url()
 
 	def update_evaluate(self,key_id):
+		""" 
+		Update rank info for the reason that each time one url got more times,
+		then the url should be considerd more important.
+		In v0.1 it does nothing.
+		"""
 		pass
 	
 	def handle_collision(self):
+		"""
+		Handle url_hash collision.
+		In v0.1 it does nothing.
+		"""
 		pass
 
 	def update_url_data(self,url):
-	# put url to datbase
+		"""
+		If url is not in db then it is inserted into db,
+		Esle reevaluate the weight of the url.
+		"""
+		# put url to datbase
 		url_hash=utils.calc_hash(url)
 		key_id=self.crawlerdb.check_db(url,url_hash)
 		if key_id==None:
 			self.crawlerdb.add_url(url,url_hash)
+			# VERY LIKELY to add the next line code:to initlize rank info of url,
+			# or we always get only the fitst url in db from get_url() func.
+			# self.crawlerfb.add_rank_info()
 			if settings.DEBUG_FLAG:
 				print 'insert %s, %s in update_url_data' %(url,url_hash)	
 			# #IMPROVE(ifkite): use namedtule
@@ -44,22 +72,31 @@ class Crawler:
 			self.handle_collision()
 
 	def add_rank(self,rating_info=0,votes_info=0,key_id=1):
+		"""
+		Calcuate the rank variable and insert rank info into db.
+		In v0.1 calcuating process is naive but workable.
+		"""
 		# write your rank func here
 		# calc rank by rating_info and roves_info
 		rank=rating_info
 		self.crawlerdb.add_rank_info(rank,key_id)
 
 	def add_book_info(self,book_info):
+		"""
+		Add parsed info into db.
+		In v0.1, crawler parse book info.
+		"""
 		self.crawlerdb.add_book_info(book_info)
 
-	# def add_book_data(self,key_id,page):
-	# 	title_info,author_info,isbn_info,tag_info,rating_info,votes_info=parse_book_info(page)
-	# 	update_priority_by_raw_page(rating_info,votes_info,key_id)
-	# 	result_book_info=(title_info,author_info,isbn_info,tag_info)
-	# 	final_book_info=utils.merge_tups(result_book_info,key_id)
-	# 	add_book_info(final_book_info)# database operation
-
 	def crawl(self):
+		"""
+		Crawl the websites.
+		Do the following things.
+		[0]Get one url from db.
+		[1]Parse url and get page.
+		[2]Parse info from page and add them into db.
+		[3]Fetch urls from page and add them into db.
+		"""
 		# utils.init_condition()
 		run_time,begin=utils.init_condition()
 		handle=parse.HandleUrl()

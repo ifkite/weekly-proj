@@ -9,24 +9,30 @@ import hashlib
 import random
 import time
 def merge_tups(*args):
+	"""
+	Merge tuples given in args, return one merged tuple.
+	"""
 	li=[]
 	for tup in args:
 		tup_list=list() if tup==None else list(tup)
 		li.extend(tup_list)
 	return tuple(li)
-	# return tuple(li)
+
 def calc_hash(url):
-	'''return a constant hash string if url is also constant'''
-	
-	# DEPRECATED: the following code return a changeable string even though the url is constant
-	# this code is maybe useful in gererating a temporary random varable 
-	# url_hash=''
-	# for i in [random.randint(1,20) for x in range(8)]:
-	# 	url_hash+=hashlib.sha1(url).hexdigest()[i]
-	
+	"""
+	Return a constant hash string for url.
+	"""	
 	return hashlib.sha1(url).hexdigest()[0:8]
 
+
+# The following three *_condition() func are used for encapsulating condition ctrl processing.
+# You can change the func for your condition ctrl processing.
+# My condition ctrl is: app should run in a specific period, and app can continue running even though
+# termiated before.
 def init_condition():
+	"""
+	Initlize condition variable and persistance file.
+	"""
 	begin=time.clock()
 	try:
 		utils_db=gdbm.open('conf.db','r')
@@ -39,41 +45,20 @@ def init_condition():
 		utils_db['run_time']=str(new_time)
 		utils_db.close()
 		return (new_time,begin)
-# def init_condition():
-# 	# 'with' version later
-# 	begin=time.clock()
-# 	try:
-# 		out=open('flag.dat','rb')
-# 		run_time=marshal.load(out)
-# 		out.close()
-# 		return (run_time,begin)
-# 	except IOError:
-# 		new_time=0
-# 		new_out=open('flag.dat','wb')
-# 		marshal.dump(new_time,new_out)
-# 		new_out.close()
-# 		return (new_time,begin)
-
-# return flag
 def stop_condition(run_time,begin):
+	"""
+	Check condition,if app should stop then reutrn 1 else return 0.
+	"""
 	run_time,begin=run_time,begin
 	stop=20# run 20 sec
 	if run_time>stop-begin:
 		return 1
 	else:
 		return 0
-
-# def update_flag(run_time,begin):
-# 	# run_time,begin=run_time,begin
-# 	pass_time=time.clock()-begin
-# 	run_time=run_time+pass_time
-# 	ouf=open('flag.dat','wb')
-# 	marshal.dump(run_time,ouf)
-# 	ouf.close()
-# 	print run_time
-# 	return (run_time,begin)
-
 def update_flag(run_time,begin):
+	"""
+	Update flag that use for condition checking.
+	"""
 	# weak code,what will happen when call update_falg before calling init_condition
 	pass_time=time.clock()-begin
 	run_time=run_time+pass_time
@@ -82,11 +67,10 @@ def update_flag(run_time,begin):
 	conf_db.close()
 	return (run_time,begin)
 
-
 if __name__ == '__main__':
-	# url='http://book.douban.com/subject/4854123/'
-	# url_hash=calc_hash(url)
-	# print url_hash
+	"""
+	Test *_condition() func.
+	"""
 	run_time,begin=init_condition()
 	while not stop_condition(run_time,begin):
 		for x in range(8000000):pass
