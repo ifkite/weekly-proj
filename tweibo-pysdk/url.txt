@@ -1,0 +1,2 @@
+https://github.com/#access_token=eebb463c87bfd293e295fbf9cf557076&expires_in=8035200&openid=9FF31A1D9A1FEFDEC109EB0DA6BA8E61&openkey=4F3A4AA386AD7E628B0C3D86AC0F79B8&refresh_token=0fd1f4174f7d25d72f4edd5bc803ef6c&state=&name=kangxiang4486&nick=%E5%BA%B7%E7%BF%94
+https://open.t.qq.com/cgi-bin/oauth2/authorize?client_id=801503782&response_type=token&redirect_uri=https://www.github.com
