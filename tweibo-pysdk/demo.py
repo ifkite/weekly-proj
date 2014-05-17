@@ -6,6 +6,7 @@ from multiprocessing.pool import ThreadPool
 #sys.path.insert(0, 'tweibo.zip')
 from tweibo import * 
 from threading import Thread
+from threading import current_thread
 from Queue import Queue
 # 换成你的 APPKEY
 APP_KEY = "801503782"
@@ -82,29 +83,26 @@ def tweibo_test():
     def worker(_task_queue,_api):
         lastTweetid,lastTweettime,lastPageflag=0,0,0
         while(True):
-            try:
-                htid=_task_queue.get()
-                # def reqApi(_api,_htid):
-                #     heat_tweets=_api.get.statuses__ht_timeline_ext(format="json",reqnum=2,tweetid=0,time=0,pageflag=0,flag=0,htid=_htid,type=1,contenttype=0x80)
-                #     for tweets_dat in heat_tweets.data['info']:
-                #         print tweets_dat['text'].encode('utf-8')
-                    #(heat_tweets.data['info'][-1]['id'],heat_tweets.data['info'][-1]['timestamp'])
-                
-                # reqApi(_api,htid)
-                
-                heat_tweets=_api.get.statuses__ht_timeline_ext(format="json",reqnum=2,tweetid=htid,time=lastTweettime,pageflag=lastPageflag,flag=0,htid=htid,type=1,contenttype=0x80)
-                for tweets_dat in heat_tweets.data['info']:
-                    print tweets_dat['text'].encode('utf-8')
-                    # time.sleep(2)
-                lastTweetid=heat_tweets.data['info'][-1]['id']
-                lastTweettime=heat_tweets.data['info'][-1]['timestamp']
-                lastPageflag=1
-                _task_queue.task_done()
-            except TypeError as e:
-                print 'TypeError'
-            except:
-                print 'Unexpected error: ',sys.exc_info()[0]
+            # try: 
+            htid=_task_queue.get()
+            heat_tweets=_api.get.statuses__ht_timeline_ext(format="json",reqnum=2,tweetid=lastTweetid,time=lastTweettime,pageflag=lastPageflag,flag=0,htid=htid,type=1,contenttype=0x80)
+            #     for tweets_dat in heat_tweets.data['info']:
+            #         print tweets_dat['text'].encode('utf-8')
+                #(heat_tweets.data['info'][-1]['id'],heat_tweets.data['info'][-1]['timestamp'])
             
+            # reqApi(_api,htid)
+            # print heat_tweets.data['info'][-1]['timestamp']
+            for tweets_dat in heat_tweets.data['info']:
+                print tweets_dat['text'].encode('utf-8')
+            lastTweetid=heat_tweets.data['info'][-1]['id']
+            lastTweettime=heat_tweets.data['info'][-1]['timestamp']
+            
+            lastPageflag=1
+            _task_queue.task_done()
+            # except TypeError as e:
+            #     print 'TypeError'
+            # except:
+            #     print 'Unexpected error: ',sys.exc_info()[0]
 
     def getHeatTrend(_task_queue):
         while(True):
@@ -120,28 +118,18 @@ def tweibo_test():
                 print 'Unexpected error: ',sys.exc_info()[0]
     
     task_queue=Queue()
-    tweetTime_queue=Queue()
+    
     #spwran threading pool
     for i in range(4):
         t=Thread(target=worker,args=(task_queue,api))
         t.start()
-    #put data into queue
-    # for dat in heat_trend.data['info']:
-    #     task_queue.put(dat['id'])
-
-    # task_queue.join()
 
     getHTThread=Thread(target=getHeatTrend,args=(task_queue,))
     getHTThread.start()
     
     t4=time.time()
     print t4-t3
-#    import codecs
-#    import json
-#    with codecs.open('1', mode='wb', encoding='utf-8') as f:
-#        json.dump(f, heat_trend)
-#    print heat_trend
-
 if __name__ == '__main__':
+    
     #access_token_test()
     tweibo_test()
