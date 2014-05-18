@@ -85,37 +85,36 @@ def tweibo_test():
         while(True):
             # try: 
             htid=_task_queue.get()
+            print 'htid ',htid
             heat_tweets=_api.get.statuses__ht_timeline_ext(format="json",reqnum=2,tweetid=lastTweetid,time=lastTweettime,pageflag=lastPageflag,flag=0,htid=htid,type=1,contenttype=0x80)
-            #     for tweets_dat in heat_tweets.data['info']:
-            #         print tweets_dat['text'].encode('utf-8')
-                #(heat_tweets.data['info'][-1]['id'],heat_tweets.data['info'][-1]['timestamp'])
-            
+            time.sleep(1)
             # reqApi(_api,htid)
             # print heat_tweets.data['info'][-1]['timestamp']
-            for tweets_dat in heat_tweets.data['info']:
-                print tweets_dat['text'].encode('utf-8')
-            lastTweetid=heat_tweets.data['info'][-1]['id']
-            lastTweettime=heat_tweets.data['info'][-1]['timestamp']
-            
-            lastPageflag=1
-            _task_queue.task_done()
+            if heat_tweets.data is not None and heat_tweets.data.has_key('info'):
+                for tweets_dat in heat_tweets.data['info']:
+                    print tweets_dat['text'].encode('utf-8')
+                lastTweetid=heat_tweets.data['info'][-1]['id']
+                lastTweettime=heat_tweets.data['info'][-1]['timestamp']
+                
+                lastPageflag=1
+                _task_queue.task_done()
             # except TypeError as e:
             #     print 'TypeError'
             # except:
             #     print 'Unexpected error: ',sys.exc_info()[0]
 
     def getHeatTrend(_task_queue):
+        heat_trend=api.get.trends__ht(format="json", reqnum=2, pos=0)
         while(True):
-            try:
-                heat_trend=api.get.trends__ht(format="json", reqnum=4, pos=0)
-                if heat_trend:
-                    for dat in heat_trend.data['info']:
-                        _task_queue.put(dat['id'])
-                    _task_queue.join()
-            except TypeError as e:
-                print 'TypeError'
-            except:
-                print 'Unexpected error: ',sys.exc_info()[0]
+            # try:
+            if heat_trend:
+                for dat in heat_trend.data['info']:
+                    _task_queue.put(dat['id'])
+                _task_queue.join()
+            # except TypeError as e:
+            #     print 'TypeError'
+            # except:
+            #     print 'Unexpected error: ',sys.exc_info()[0]
     
     task_queue=Queue()
     
