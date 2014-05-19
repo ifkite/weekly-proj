@@ -8,6 +8,7 @@ from tweibo import *
 from threading import Thread
 from threading import current_thread
 from Queue import Queue
+import MySQLdb
 # 换成你的 APPKEY
 APP_KEY = "801503782"
 APP_SECRET = "cee9c0bd355f8c730304151887aabff86"
@@ -21,6 +22,20 @@ IMG_EXAMPLE = "example.png"
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
+
+
+
+def connectDb():
+    cont=MySQLdb.connect(user='root',passwd='calm')#set your user and passwd pairs in your MySQL first
+    cont.set_character_set('utf8')
+    cur=cont.cursor()
+    cur.execute('SET NAMES utf8;')
+    cur.execute('SET CHARACTER SET utf8;')
+    cur.execute('SET character_set_connect=utf8;')
+    cur.execute('''USE tweet''')
+    return (cont,cur)
+
+cont,cur=connectDb()
 
 def access_token_test():
     """ 访问get_access_token_url()的URL并授权后，会跳转callback页面，其中包含如下参数：
@@ -78,7 +93,7 @@ def tweibo_test():
     #print t2-t1
     t3=time.time()
     
-    heat_trend=api.get.trends__ht(format="json", reqnum=4, pos=0)
+    # heat_trend=api.get.trends__ht(format="json", reqnum=4, pos=0)
     
     def worker(_task_queue,_api):
         lastTweetid,lastTweettime,lastPageflag=0,0,0
@@ -87,12 +102,27 @@ def tweibo_test():
             htid=_task_queue.get()
             print 'htid ',htid
             heat_tweets=_api.get.statuses__ht_timeline_ext(format="json",reqnum=2,tweetid=lastTweetid,time=lastTweettime,pageflag=lastPageflag,flag=0,htid=htid,type=1,contenttype=0x80)
-            time.sleep(1)
+            
             # reqApi(_api,htid)
             # print heat_tweets.data['info'][-1]['timestamp']
             if heat_tweets.data is not None and heat_tweets.data.has_key('info'):
                 for tweets_dat in heat_tweets.data['info']:
-                    print tweets_dat['text'].encode('utf-8')
+                    tweetWholeText=tweets_dat['text'].encode('utf-8')
+                    splitText=tweetWholeText.split('#')
+                    t
+                    if len(splitText)>2:
+                        subjectText=splitText[1]
+                        tweetText=splitText[0]
+                        for i in range(2,len(splitText)):
+                            tweetText=tweetText+splitText[i]
+                        nickName=tweets_dat['nick']
+                        print subjectText,tweetText,nickName
+                        
+                        cur.execute('''REPLACE INTO tweet_info(subject,tweet_text,nickname) VALUES(%s,%s,%s)''',(subjectText,tweetText,nickName))
+                        print 'insert into db'
+                        cont.commit()
+                        # cont.rollback()
+                    time.sleep(4)
                 lastTweetid=heat_tweets.data['info'][-1]['id']
                 lastTweettime=heat_tweets.data['info'][-1]['timestamp']
                 
