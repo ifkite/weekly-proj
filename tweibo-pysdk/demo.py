@@ -23,8 +23,6 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-
-
 def connectDb():
     cont=MySQLdb.connect(user='root',passwd='calm')#set your user and passwd pairs in your MySQL first
     cont.set_character_set('utf8')
@@ -35,6 +33,7 @@ def connectDb():
     cur.execute('''USE tweet''')
     return (cont,cur)
 
+#bad code
 cont,cur=connectDb()
 
 def access_token_test():
@@ -95,12 +94,12 @@ def tweibo_test():
     
     # heat_trend=api.get.trends__ht(format="json", reqnum=4, pos=0)
     
-    def worker(_task_queue,_api):
+    def worker(_task_queue,_db_queue,_api):
         lastTweetid,lastTweettime,lastPageflag=0,0,0
         while(True): 
             htid=_task_queue.get()
             print 'htid ',htid
-            heat_tweets=_api.get.statuses__ht_timeline_ext(format="json",reqnum=2,tweetid=lastTweetid,time=lastTweettime,pageflag=lastPageflag,flag=0,htid=htid,type=1,contenttype=0x80)
+            heat_tweets=_api.get.statuses__ht_timeline_ext(format="json",reqnum=100,tweetid=lastTweetid,time=lastTweettime,pageflag=lastPageflag,flag=0,htid=htid,type=1,contenttype=0x80)
             if heat_tweets.data is not None and heat_tweets.data.has_key('info'):
                 for tweets_dat in heat_tweets.data['info']:
                     tweetWholeText=tweets_dat['text'].encode('utf-8')
@@ -112,32 +111,46 @@ def tweibo_test():
                         for i in range(2,len(splitText)):
                             tweetText=tweetText+splitText[i]
                         nickName=tweets_dat['nick']
+
                         print subjectText,tweetText,nickName
-                        # cur.execute('''REPLACE INTO tweet_info(subject,tweet_text,nickname) VALUES(%s,%s,%s)''',(subjectText,tweetText,nickName))
-                        print 'insert into db'
-                        # cont.commit()
-                    time.sleep(4)
+                        _db_queue.put((subjectText,tweetText,nickName))
+                        _db_queue.join()
+                time.sleep(4)
                 lastTweetid=heat_tweets.data['info'][-1]['id']
                 lastTweettime=heat_tweets.data['info'][-1]['timestamp']
                 
                 lastPageflag=1
                 _task_queue.task_done()
     def getHeatTrend(_task_queue):
-        heat_trend=api.get.trends__ht(format="json", reqnum=2, pos=0)
+        heat_trend=api.get.trends__ht(format="json", reqnum=6, pos=0)
         while(True):
             if heat_trend:
                 for dat in heat_trend.data['info']:
                     _task_queue.put(dat['id'])
                 _task_queue.join()
+    def insDb(_db_queue):
+        #bad code:not reuseable
+        while(True):
+            subjectText,tweetText,nickName=_db_queue.get()
+            try:
+                cur.execute('''REPLACE INTO tweet_info(subject,tweet_text,nickname) VALUES(%s,%s,%s)''',(subjectText,tweetText,nickName))                
+                cont.commit()
+                print 'insert into db'
+            except:
+                cont.rollback()
+            _db_queue.task_done()
 
     task_queue=Queue()
-    
-    for i in range(4):
-        t=Thread(target=worker,args=(task_queue,api))
+    db_queue=Queue()
+    for i in range(10):
+        t=Thread(target=worker,args=(task_queue,db_queue,api))
         t.start()
 
     getHTThread=Thread(target=getHeatTrend,args=(task_queue,))
     getHTThread.start()
+    insDbThread=Thread(target=insDb,args=(db_queue,))
+    insDbThread.start()
+
     t4=time.time()
     print t4-t3
 
