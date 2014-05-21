@@ -104,7 +104,6 @@ def tweibo_test():
                 for tweets_dat in heat_tweets.data['info']:
                     tweetWholeText=tweets_dat['text'].encode('utf-8')
                     splitText=tweetWholeText.split('#')
-                    t
                     if len(splitText)>2:
                         subjectText=splitText[1]
                         tweetText=splitText[0]
@@ -120,10 +119,12 @@ def tweibo_test():
                 lastTweettime=heat_tweets.data['info'][-1]['timestamp']
                 
                 lastPageflag=1
-                _task_queue.task_done()
+            else:
+                print heat_tweets
+            _task_queue.task_done()
     def getHeatTrend(_task_queue):
-        heat_trend=api.get.trends__ht(format="json", reqnum=6, pos=0)
         while(True):
+            heat_trend=api.get.trends__ht(format="json", reqnum=20, pos=0)
             if heat_trend:
                 for dat in heat_trend.data['info']:
                     _task_queue.put(dat['id'])
@@ -142,7 +143,7 @@ def tweibo_test():
 
     task_queue=Queue()
     db_queue=Queue()
-    for i in range(10):
+    for i in range(1):
         t=Thread(target=worker,args=(task_queue,db_queue,api))
         t.start()
 
