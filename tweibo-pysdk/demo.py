@@ -143,7 +143,7 @@ def tweibo_test():
 
     task_queue=Queue()
     db_queue=Queue()
-    for i in range(1):
+    for i in range(10):
         t=Thread(target=worker,args=(task_queue,db_queue,api))
         t.start()
 
