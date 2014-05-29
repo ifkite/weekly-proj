@@ -10,7 +10,6 @@
 from PyQt4 import QtCore, QtGui
 from demo import tweibo_test
 import MySQLdb
-
 #use singleton
 def connectDb():
     cont=MySQLdb.connect(user='root',passwd='calm')#set your user and passwd pairs in your MySQL first
@@ -30,14 +29,15 @@ class Ui_MainWindow(object):
         MainWindow.resize(779, 474)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.scrollArea = QtGui.QScrollArea(self.centralwidget)
-        self.scrollArea.setGeometry(QtCore.QRect(60, 280, 631, 141))
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setObjectName("scrollArea")
-        self.scrollAreaWidgetContents_2 = QtGui.QWidget(self.scrollArea)
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 629, 139))
-        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
-        self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
+        # self.scrollArea = QtGui.QScrollArea(self.centralwidget)
+        # self.scrollArea.setGeometry(QtCore.QRect(60, 280, 631, 141))
+        # self.scrollArea.setWidgetResizable(True)
+        # self.scrollArea.setObjectName("scrollArea")
+        
+        # self.scrollAreaWidgetContents_2 = QtGui.QWidget(self.scrollArea)
+        # self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 629, 139))
+        # self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+        # self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
         self.label = QtGui.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(60, 250, 62, 17))
         self.label.setObjectName("label")
@@ -66,6 +66,12 @@ class Ui_MainWindow(object):
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 779, 23))
         self.menubar.setObjectName("menubar")
+
+        self.plainTextEdit = QtGui.QPlainTextEdit(self.centralwidget)
+        self.plainTextEdit.setGeometry(QtCore.QRect(60, 280, 631, 141))
+        self.plainTextEdit.setObjectName("plainTextEdit")
+        self.plainTextEdit.setReadOnly(True)
+
         MainWindow.setMenuBar(self.menubar)
         self.setSignal()
         self.retranslateUi(MainWindow)
@@ -82,8 +88,14 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabShow), QtGui.QApplication.translate("MainWindow", "show result", None, QtGui.QApplication.UnicodeUTF8))
     
     def setSignal(self):
+        self.pushButton.clicked.connect(self.scratch)
         self.pushButton_2.clicked.connect(self.pr)
         self.pushButton_3.clicked.connect(self.pop)
+    
+    def scratch(self):
+        # pass
+        tweibo_test()
+        # self.plainTextEdit.appendPlainText("aa")
     def pr(self):
         self.popwin=PopWin()
         # self.popwin.setGeometry(QtCore.QRect(200, 200, 120, 120))
@@ -111,6 +123,7 @@ class Ui_MainWindow(object):
         # print self.date.dateEdit.date().day(),self.date.dateEdit.date().month(),self.date.dateEdit.date().year()
         print self.date.dateEdit.date().getDate()
         self.date.show()
+
 
 class PopWin(QtGui.QWidget):
     def __init__(self):
